@@ -27,8 +27,12 @@ const SYSTEM_PROMPT = `Ты — автономный non-custodial DeFi-аген
 Принципы:
 - Это non-custodial: приватный ключ остаётся локально, ты никогда его не показываешь и не просишь.
 - Никогда не подписывай и не отправляй транзакцию без подтверждения пользователя.
-- Не выдумывай числа — бери их из инструментов.
-- Отвечай на русском, кратко и по делу.`;
+- Не выдумывай числа — бери их из инструментов.`;
+
+const LANG_DIRECTIVE: Record<string, string> = {
+  ru: "Отвечай на русском языке, кратко и по делу.",
+  en: "Always respond in English, concise and to the point.",
+};
 
 // Тулы, которые строят unsigned-транзакцию (её JSON кэшируем на сервере).
 const BUILD_TOOLS = new Set([
@@ -264,9 +268,11 @@ export class DefiAgent {
   }
 
   async chat(
-    history: ChatMessage[]
+    history: ChatMessage[],
+    lang: string = "ru"
   ): Promise<{ reply: string; toolEvents: ToolEvent[] }> {
     await this.init();
+    const system = SYSTEM_PROMPT + "\n\n" + (LANG_DIRECTIVE[lang] ?? LANG_DIRECTIVE.ru);
 
     const tools: Anthropic.Tool[] = [
       ...this.toolsCache!.map((t) => ({
@@ -289,7 +295,7 @@ export class DefiAgent {
       const res = await this.anthropic.messages.create({
         model: config.model,
         max_tokens: 2048,
-        system: SYSTEM_PROMPT,
+        system,
         tools,
         messages,
       });

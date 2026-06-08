@@ -64,12 +64,12 @@ app.get("/api/premium/intel", async (req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { messages } = req.body ?? {};
+    const { messages, lang } = req.body ?? {};
     if (!Array.isArray(messages)) {
       res.status(400).json({ error: "ожидается поле messages[]" });
       return;
     }
-    const result = await agent.chat(messages);
+    const result = await agent.chat(messages, lang === "en" ? "en" : "ru");
     res.json(result);
   } catch (e) {
     console.error(e);

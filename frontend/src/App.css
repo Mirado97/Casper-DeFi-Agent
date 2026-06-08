@@ -32,6 +32,36 @@ body {
   overflow: hidden;
 }
 
+/* Language toggle */
+.lang-toggle {
+  position: fixed;
+  top: 14px;
+  right: 18px;
+  z-index: 5;
+  display: flex;
+  gap: 2px;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 999px;
+  padding: 3px;
+  backdrop-filter: blur(8px);
+}
+.lang-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.lang-toggle button.on {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+}
+
 /* Ambient glows */
 .glow { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.5; pointer-events: none; z-index: 0; }
 .glow-1 { width: 520px; height: 520px; background: #ff3b3b; top: -180px; left: -120px; opacity: 0.22; }
