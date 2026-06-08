@@ -1,0 +1,19 @@
+{
+  "name": "casper-defi-agent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Non-custodial AI DeFi agent for Casper Network (CSPR.trade MCP + x402)",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "npm -w backend run dev",
+    "dev:frontend": "npm -w frontend run dev",
+    "build": "npm -w backend run build && npm -w frontend run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
