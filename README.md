@@ -9,6 +9,8 @@ You talk to the agent like a chat assistant. It analyzes the market, prices the 
 your key, and submits it to the network. It can also **autonomously pay for premium data
 via x402 micropayments**.
 
+![Casper DeFi Agent — UI](docs/ui-hero.png)
+
 ---
 
 ## Why it's different
@@ -33,6 +35,11 @@ not a contract + script proof-of-concept.
 - ✍️ **Local, non-custodial signing** — `build_swap` → sign `TransactionV1` with the agent's key → `submit_transaction`
 - 💸 **x402 micropayments** — agent pays per request for premium market intel (machine-to-machine commerce)
 - 🎨 **Premium chat UI** — markdown tables, an action **pipeline** of every tool call, wallet card with live CSPR balance, and an x402 payments feed
+
+The agent analyzing a swap — a markdown breakdown plus the live action pipeline of every
+tool it called, and the x402 micropayment shown in the sidebar:
+
+![Trade analysis in action](docs/ui-analysis.png)
 
 ---
 
