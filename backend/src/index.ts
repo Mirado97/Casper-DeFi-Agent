@@ -37,6 +37,16 @@ app.get("/api/x402", (_req, res) => {
   res.json(agent.x402Info());
 });
 
+// Демо: внешний агент покупает у нас аналитику (поток 2 — earn).
+app.post("/api/x402/demo-sale", async (_req, res) => {
+  try {
+    const r = await agent.simulateSale();
+    res.json({ ok: r.ok, receipt: r.receipt });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
 // Защищённый x402-ресурс: без оплаты — HTTP 402 с требованиями, с подписью — данные.
 app.get("/api/premium/intel", async (req, res) => {
   const header = req.header("PAYMENT-SIGNATURE");

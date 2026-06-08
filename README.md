@@ -33,7 +33,7 @@ not a contract + script proof-of-concept.
 - 🗣️ **Natural-language trading** — "swap 50 CSPR to sCSPR", "show my portfolio", "is this trade safe?"
 - 🔬 **Pre-trade analysis** — the agent calls `analyze_trade` / `get_quote` and shows price impact & slippage before acting
 - ✍️ **Local, non-custodial signing** — `build_swap` → sign `TransactionV1` with the agent's key → `submit_transaction`
-- 💸 **x402 micropayments** — agent pays per request for premium market intel (machine-to-machine commerce)
+- 💸 **x402 agent economy** — the agent both pays (safety signals, per-trade fees) and earns (sells analytics to other agents), with a live spent/earned ledger
 - 🎨 **Premium chat UI** — markdown tables, an action **pipeline** of every tool call, wallet card with live CSPR balance, and an x402 payments feed
 
 The agent analyzing a swap — a markdown breakdown plus the live action pipeline of every
@@ -118,31 +118,39 @@ the network rejects the transaction (no funds), which is ideal for safe debuggin
 
 ---
 
-## x402 micropayments
+## x402 — a two-sided agent economy
 
-The agent pays a CEP-18 micropayment for a protected resource using the x402 protocol
-(Casper **`exact`** scheme):
+The agent both **pays** and **earns** over the x402 protocol (Casper **`exact`** scheme),
+tracked in a live **Spent / Earned ledger** in the sidebar:
+
+| Flow | Direction | What happens |
+|------|-----------|--------------|
+| **Safety signal** | 💸 spend | Before a trade, the agent buys a risk score from an external provider (data it doesn't have) |
+| **Per-trade fee** | 💸 spend | Each executed swap pays a small service fee to the treasury |
+| **Sell analytics** | 💰 earn | External agents pay **us** for premium analytics via the protected `/api/premium/intel` endpoint |
+
+Each payment is a real signed authorization:
 
 ```
-GET /api/premium/intel
-   → 402 Payment Required + PaymentRequirements
-   → agent signs TransferAuthorization (EIP-712 / secp256k1)
-   → resend with PAYMENT-SIGNATURE header
+402 Payment Required + PaymentRequirements
+   → sign TransferAuthorization (EIP-712 / secp256k1)
+   → PAYMENT-SIGNATURE header
    → facilitator verify + settle
-   → 200 + premium analytics (real CSPR.trade data behind the paywall)
+   → 200 + resource
 ```
 
-Both sides are implemented (`backend/src/x402/`):
+Implemented in `backend/src/x402/`:
 
-- `wallet.ts` — agent's secp256k1 payment wallet (separate from the ed25519 DEX wallet)
+- `wallet.ts` — secp256k1 payment wallet (separate from the ed25519 DEX wallet)
 - `client.ts` — builds & signs the `PaymentPayload` via `@casper-ecosystem/casper-eip-712`
 - `facilitator.ts` — **`local`** (real signature/crypto verification, no on-chain settlement)
   and **`remote`** (CSPR.cloud facilitator) modes
-- protected route `GET /api/premium/intel` + agent tool `get_market_intel`
+- `service.ts` — resource catalog, spend/earn ledger, in-process buy + external-buyer fulfilment
+- agent tool `get_safety_signal`, protected route `GET /api/premium/intel`, demo `POST /api/x402/demo-sale`
 
-`local` mode produces **real EIP-712/secp256k1 signatures** with full crypto verification —
-on-chain settlement is gated behind `remote` mode (needs a CSPR.cloud facilitator token and
-CEP-18 balance), switchable via `.env` with no code changes.
+`local` mode produces **real EIP-712/secp256k1 signatures** with full crypto verification;
+on-chain settlement is gated behind `remote` mode (CSPR.cloud facilitator token + CEP-18
+balance), switchable via `.env` with no code changes.
 
 ---
 

@@ -13,9 +13,12 @@ type Payment = {
   status: "settled" | "failed";
   transaction: string;
   ts: number;
+  direction: "spend" | "earn";
+  description?: string;
 };
 type X402Info = {
   wallet: { address: string; ephemeral: boolean; mode: string; network: string };
+  ledger: { earned: number; spent: number; net: number };
   payments: Payment[];
 };
 
@@ -40,6 +43,12 @@ export default function App() {
   function refreshWallet() {
     fetch("/api/wallet").then((r) => r.json()).then(setWallet).catch(() => {});
     fetch("/api/x402").then((r) => r.json()).then(setX402).catch(() => {});
+  }
+  async function simulateBuyer() {
+    try {
+      await fetch("/api/x402/demo-sale", { method: "POST" });
+    } catch {}
+    refreshWallet();
   }
   useEffect(() => {
     fetch("/api/health")
@@ -138,16 +147,36 @@ export default function App() {
             <span className="x402-mode">{(x402?.wallet.mode ?? "—") + t.modeSuffix}</span>
             <span className="x402-net">{x402?.wallet.network ?? ""}</span>
           </div>
+
+          <div className="x402-ledger">
+            <div className="led earn">
+              <span>{t.earned}</span><b>+{(x402?.ledger.earned ?? 0).toFixed(4)}</b>
+            </div>
+            <div className="led spend">
+              <span>{t.spent}</span><b>−{(x402?.ledger.spent ?? 0).toFixed(4)}</b>
+            </div>
+            <div className="led net">
+              <span>{t.ledgerNet}</span>
+              <b className={(x402?.ledger.net ?? 0) >= 0 ? "pos" : "neg"}>
+                {(x402?.ledger.net ?? 0).toFixed(4)}
+              </b>
+            </div>
+          </div>
+
           {(!x402 || x402.payments.length === 0) && (
             <div className="x402-empty">{t.x402Empty}</div>
           )}
           {x402?.payments.slice(0, 4).map((p) => (
-            <div key={p.id} className={`x402-row ${p.status}`}>
-              <span className="x402-dot" />
+            <div key={p.id} className={`x402-row ${p.direction} ${p.status}`}>
+              <span className="x402-dir">{p.direction === "earn" ? "▲" : "▼"}</span>
               <span className="x402-res">{p.resource}</span>
-              <span className="x402-amt">{p.priceLabel}</span>
+              <span className="x402-amt">
+                {p.direction === "earn" ? "+" : "−"}{p.priceLabel.replace(/ .*/, "")}
+              </span>
             </div>
           ))}
+
+          <button className="x402-sim" onClick={simulateBuyer}>{t.simBuyer}</button>
         </div>
 
         <div className="cap-title">{t.capsTitle}</div>

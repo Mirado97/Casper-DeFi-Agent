@@ -14,6 +14,7 @@ export const TOOL_ICONS: Record<string, string> = {
   sign_and_submit: "✍️",
   get_my_wallet: "🔑",
   get_market_intel: "💸",
+  get_safety_signal: "🛡️",
 };
 
 type Dict = {
@@ -29,6 +30,10 @@ type Dict = {
   x402Title: string;
   modeSuffix: string;
   x402Empty: string;
+  earned: string;
+  spent: string;
+  ledgerNet: string;
+  simBuyer: string;
   capsTitle: string;
   caps: string[];
   heroBadge: string;
@@ -58,7 +63,11 @@ export const I18N: Record<Lang, Dict> = {
     warnFund: "top up address with CSPR for gas",
     x402Title: "x402 · agent micropayments",
     modeSuffix: " mode",
-    x402Empty: "No payments yet. Ask the agent for “premium analytics”.",
+    x402Empty: "No activity yet. Ask for a safety signal, run a trade, or simulate a buyer.",
+    earned: "Earned",
+    spent: "Spent",
+    ledgerNet: "Net",
+    simBuyer: "▶ Simulate external buyer",
     capsTitle: "Capabilities",
     caps: [
       "Trade analysis: price impact, slippage",
@@ -96,6 +105,7 @@ export const I18N: Record<Lang, Dict> = {
       sign_and_submit: "Sign + submit",
       get_my_wallet: "Agent wallet",
       get_market_intel: "Premium intel (x402)",
+      get_safety_signal: "Safety signal (x402)",
     },
   },
   ru: {
@@ -110,7 +120,11 @@ export const I18N: Record<Lang, Dict> = {
     warnFund: "пополни адрес CSPR для оплаты газа",
     x402Title: "x402 · микроплатежи агента",
     modeSuffix: " mode",
-    x402Empty: "Платежей пока нет. Попроси у агента «премиум-аналитику».",
+    x402Empty: "Активности нет. Запроси сигнал безопасности, сделай сделку или симулируй покупателя.",
+    earned: "Заработано",
+    spent: "Потрачено",
+    ledgerNet: "Итого",
+    simBuyer: "▶ Симулировать покупателя",
     capsTitle: "Возможности",
     caps: [
       "Анализ сделок: price impact, slippage",
@@ -148,6 +162,7 @@ export const I18N: Record<Lang, Dict> = {
       sign_and_submit: "Подпись + отправка",
       get_my_wallet: "Кошелёк агента",
       get_market_intel: "Премиум-аналитика (x402)",
+      get_safety_signal: "Сигнал безопасности (x402)",
     },
   },
 };

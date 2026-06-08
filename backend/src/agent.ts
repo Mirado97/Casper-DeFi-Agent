@@ -116,14 +116,23 @@ export class DefiAgent {
     };
   }
 
-  /** Инфо о x402-кошельке агента и последних микроплатежах (для UI). */
+  /** Инфо о x402-экономике агента: кошелёк, леджер (earn/spend), платежи. */
   x402Info() {
-    return { wallet: this.x402.walletInfo(), payments: this.x402.recentPayments() };
+    return {
+      wallet: this.x402.walletInfo(),
+      ledger: this.x402.ledger(),
+      payments: this.x402.recentPayments(),
+    };
+  }
+
+  /** Демо-продажа: внешний агент платит нам за аналитику (earn). */
+  async simulateSale() {
+    return this.x402.simulateSale(() => this.marketIntel());
   }
 
   /** Требования оплаты для защищённого HTTP-ресурса /api/premium/intel. */
   premiumRequirements() {
-    return this.x402.requirementsFor("market-intel", "Премиум рыночная аналитика CSPR.trade");
+    return this.x402.requirementsFor("market-intel");
   }
 
   /** Обработка оплаченного запроса к защищённому ресурсу (внешний x402-клиент). */
@@ -153,9 +162,9 @@ export class DefiAgent {
         },
       },
       {
-        name: "get_market_intel",
+        name: "get_safety_signal",
         description:
-          "Купить ПРЕМИУМ рыночную аналитику (market intel) за x402-микроплатёж. Агент автономно платит наименьшую сумму CEP-18 через протокол x402 и получает расширенный сигнал. Используй, когда пользователь просит углублённую аналитику/«альфу»/рекомендацию перед крупной сделкой.",
+          "Купить у ВНЕШНЕГО провайдера оценку безопасности сделки (safety signal) за x402-микроплатёж. Агент автономно платит CEP-18 через x402 и получает риск-оценку, которой у него самого нет. Используй перед крупной сделкой или когда пользователь просит проверку риска/«альфу».",
         input_schema: { type: "object", properties: {} },
       },
     ];
@@ -185,14 +194,19 @@ export class DefiAgent {
         signed_deploy_json: signed,
       });
       this.pending.delete(input.tx_id);
-      return { submitted: true, result: mcpText(res) };
+      // Поток 3: сервис-комиссия за исполненную сделку (x402, spend).
+      const fee = await this.x402.purchase("trade-fee");
+      return {
+        submitted: true,
+        result: mcpText(res),
+        trade_fee: fee.ok
+          ? { amount: fee.receipt.priceLabel, transaction: fee.receipt.transaction, via: "x402" }
+          : undefined,
+      };
     }
-    if (name === "get_market_intel") {
-      const r = await this.x402.purchase(
-        "market-intel",
-        () => this.marketIntel(),
-        "Премиум рыночная аналитика CSPR.trade"
-      );
+    if (name === "get_safety_signal") {
+      // Поток 1: агент платит внешнему провайдеру за риск-оценку (x402, spend).
+      const r = await this.x402.purchase("safety-signal", () => this.safetySignal());
       if (!r.ok) {
         return { error: "x402-платёж не прошёл: " + r.receipt.reason, payment: r.receipt };
       }
@@ -201,13 +215,37 @@ export class DefiAgent {
           amount: r.receipt.priceLabel,
           payer: r.receipt.payer,
           transaction: r.receipt.transaction,
-          network: r.receipt.network,
           via: "x402",
         },
-        intel: r.data,
+        safety: r.data,
       };
     }
     return { error: `Неизвестный локальный инструмент: ${name}` };
+  }
+
+  /** Покупаемый сигнал безопасности: риск-оценка из условий рынка CSPR/sCSPR. */
+  private async safetySignal(): Promise<unknown> {
+    let impact = "";
+    try {
+      const res = await this.mcp.callTool("estimate_price_impact", {
+        token_in: "CSPR",
+        token_out: "sCSPR",
+        amount: "1000",
+      });
+      impact = mcpText(res);
+    } catch (e) {
+      impact = "нет данных: " + String(e);
+    }
+    const pct = Number((impact.match(/([\d.]+)\s*%/) ?? [])[1] ?? "0");
+    const level = pct < 0.5 ? "SAFE" : pct < 2 ? "CAUTION" : "RISK";
+    return {
+      provider: "external x402 safety oracle",
+      pair: "CSPR/sCSPR",
+      risk_level: level,
+      price_impact_pct: pct,
+      detail: impact,
+      generated_at: new Date().toISOString(),
+    };
   }
 
   /** Премиум-данные за пейволом: реальная аналитика CSPR/sCSPR с CSPR.trade. */
