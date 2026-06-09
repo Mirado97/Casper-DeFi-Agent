@@ -72,6 +72,37 @@ app.get("/api/premium/intel", async (req, res) => {
   }
 });
 
+// Платный Token Safety Oracle: x402-gated. Без оплаты — 402 + требования.
+app.get("/api/safety/check", async (req, res) => {
+  const token = String(req.query.token ?? "").trim();
+  if (!token) {
+    res.status(400).json({ error: "query param 'token' required" });
+    return;
+  }
+  const header = req.header("PAYMENT-SIGNATURE");
+  if (!header) {
+    res.status(402).json({
+      x402Version: 2,
+      error: "payment required",
+      resource: "token-safety-check",
+      accepts: [agent.safetyRequirements()],
+    });
+    return;
+  }
+  try {
+    const { decodePaymentHeader } = await import("./x402/client.js");
+    const result = await agent.fulfillSafety(token, decodePaymentHeader(header));
+    if (!result.ok) {
+      res.status(402).json({ error: "payment rejected", receipt: result.receipt });
+      return;
+    }
+    res.setHeader("X-PAYMENT-RESPONSE", result.receipt.transaction);
+    res.json({ payment: result.receipt, report: result.data });
+  } catch (e) {
+    res.status(400).json({ error: String(e) });
+  }
+});
+
 app.post("/api/chat", async (req, res) => {
   try {
     const { messages, lang } = req.body ?? {};

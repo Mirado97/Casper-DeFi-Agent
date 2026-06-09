@@ -15,6 +15,7 @@ export const TOOL_ICONS: Record<string, string> = {
   get_my_wallet: "🔑",
   get_market_intel: "💸",
   get_safety_signal: "🛡️",
+  check_token_safety: "🛡️",
 };
 
 type Dict = {
@@ -73,7 +74,7 @@ export const I18N: Record<Lang, Dict> = {
       "Trade analysis: price impact, slippage",
       "Swaps & liquidity on CSPR.trade",
       "Local non-custodial signing",
-      "x402 micropayments for premium data",
+      "Token Safety Oracle — sold to agents via x402 + MCP",
     ],
     heroBadge: "⚡ AI × Casper",
     heroH1: ["Trade on-chain", "in plain language"],
@@ -106,6 +107,7 @@ export const I18N: Record<Lang, Dict> = {
       get_my_wallet: "Agent wallet",
       get_market_intel: "Premium intel (x402)",
       get_safety_signal: "Safety signal (x402)",
+      check_token_safety: "Token safety check",
     },
   },
   ru: {
@@ -130,7 +132,7 @@ export const I18N: Record<Lang, Dict> = {
       "Анализ сделок: price impact, slippage",
       "Свопы и ликвидность на CSPR.trade",
       "Локальная подпись транзакций",
-      "x402-микроплатежи за премиум-данные",
+      "Token Safety Oracle — продаём агентам через x402 + MCP",
     ],
     heroBadge: "⚡ AI × Casper",
     heroH1: ["Торгуй на блокчейне", "обычным языком"],
@@ -163,6 +165,7 @@ export const I18N: Record<Lang, Dict> = {
       get_my_wallet: "Кошелёк агента",
       get_market_intel: "Премиум-аналитика (x402)",
       get_safety_signal: "Сигнал безопасности (x402)",
+      check_token_safety: "Проверка токена",
     },
   },
 };

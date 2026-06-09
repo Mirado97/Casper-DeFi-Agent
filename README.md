@@ -21,7 +21,7 @@ This project covers **all three pillars** of the Casper AI Toolkit in a single p
 |--------|--------------|
 | **MCP** | Connects to the official **CSPR.trade MCP** (`mcp.cspr.trade/mcp`) — 23 live DEX tools |
 | **Non-custodial signing** | Signs **Casper 2.0 `TransactionV1`** locally; private key never leaves the host |
-| **x402** | Agent autonomously pays a **CEP-18 micropayment** (EIP-712 / secp256k1) for premium analytics |
+| **x402** | Sells a **Token Safety Oracle** to other agents pay-per-call (EIP-712 / secp256k1) over HTTP **+ MCP** |
 
 It runs against **mainnet** through the real DEX, and presents a polished product UI —
 not a contract + script proof-of-concept.
@@ -33,7 +33,8 @@ not a contract + script proof-of-concept.
 - 🗣️ **Natural-language trading** — "swap 50 CSPR to sCSPR", "show my portfolio", "is this trade safe?"
 - 🔬 **Pre-trade analysis** — the agent calls `analyze_trade` / `get_quote` and shows price impact & slippage before acting
 - ✍️ **Local, non-custodial signing** — `build_swap` → sign `TransactionV1` with the agent's key → `submit_transaction`
-- 💸 **x402 agent economy** — the agent both pays (safety signals, per-trade fees) and earns (sells analytics to other agents), with a live spent/earned ledger
+- 🛡️ **Token Safety Oracle** — honeypot / sell-tax / liquidity screening of any Casper token, **sold to other agents pay-per-call over x402 + MCP** (and used free in-chat)
+- 💸 **x402 agent economy** — the agent both earns (safety checks, analytics) and pays (per-trade fee), with a live spent/earned ledger
 - 🎨 **Premium chat UI** — markdown tables, an action **pipeline** of every tool call, wallet card with live CSPR balance, and an x402 payments feed
 
 The agent analyzing a swap — a markdown breakdown plus the live action pipeline of every
@@ -118,35 +119,60 @@ the network rejects the transaction (no funds), which is ideal for safe debuggin
 
 ---
 
-## x402 — a two-sided agent economy
+## x402 — a sellable Token Safety Oracle + agent economy
 
-The agent both **pays** and **earns** over the x402 protocol (Casper **`exact`** scheme),
-tracked in a live **Spent / Earned ledger** in the sidebar:
+The flagship x402 product is a **Casper Token Safety Oracle**: a real screening service that
+any external AI agent can call **pay-per-use, with no account**, over both HTTP and **MCP**.
+
+**What the check does** (from live CSPR.trade data):
+- **Honeypot / sell-tax** — quotes CSPR→token and token→CSPR round-trip; low retention or an
+  un-sellable token is flagged
+- **Liquidity** — price impact on a fixed-size trade
+- Returns a **risk score + `SAFE / CAUTION / DANGER`** with factors
+
+Our own agent uses the oracle **for free** inside the chat (tool `check_token_safety`);
+**external** agents pay for it via x402. All payments land in a live **Spent / Earned ledger**.
 
 | Flow | Direction | What happens |
 |------|-----------|--------------|
-| **Safety signal** | 💸 spend | Before a trade, the agent buys a risk score from an external provider (data it doesn't have) |
+| **Token Safety Oracle** | 💰 earn | External agents pay us per token check via x402 (HTTP + MCP) |
+| **Sell analytics** | 💰 earn | External agents pay for premium market analytics (`/api/premium/intel`) |
 | **Per-trade fee** | 💸 spend | Each executed swap pays a small service fee to the treasury |
-| **Sell analytics** | 💰 earn | External agents pay **us** for premium analytics via the protected `/api/premium/intel` endpoint |
 
-Each payment is a real signed authorization:
+Each payment is a real signed authorization (Casper **`exact`** scheme):
 
 ```
 402 Payment Required + PaymentRequirements
    → sign TransferAuthorization (EIP-712 / secp256k1)
-   → PAYMENT-SIGNATURE header
+   → PAYMENT-SIGNATURE header (or x_payment arg over MCP)
    → facilitator verify + settle
    → 200 + resource
 ```
 
-Implemented in `backend/src/x402/`:
+### Sell it over MCP
 
-- `wallet.ts` — secp256k1 payment wallet (separate from the ed25519 DEX wallet)
-- `client.ts` — builds & signs the `PaymentPayload` via `@casper-ecosystem/casper-eip-712`
-- `facilitator.ts` — **`local`** (real signature/crypto verification, no on-chain settlement)
-  and **`remote`** (CSPR.cloud facilitator) modes
-- `service.ts` — resource catalog, spend/earn ledger, in-process buy + external-buyer fulfilment
-- agent tool `get_safety_signal`, protected route `GET /api/premium/intel`, demo `POST /api/x402/demo-sale`
+A standalone MCP server exposes the paid `check_token_safety` tool so any MCP client
+(Claude Desktop, Cursor, another agent) can discover and call it:
+
+```bash
+npm run mcp -w backend          # stdio MCP server: check_token_safety
+npm run mcp:demo -w backend     # external buyer agent: 402 → pay (x402) → safety report
+```
+
+Claude Desktop config:
+
+```json
+{ "mcpServers": { "casper-token-safety": {
+  "command": "npm", "args": ["run", "mcp", "-w", "backend"] } } }
+```
+
+Implemented in `backend/src/`:
+
+- `safety/oracle.ts` — the token safety check (honeypot + liquidity)
+- `safety-mcp.ts` — standalone x402-paid MCP server · `safety-mcp-demo.ts` — buyer-agent demo
+- `x402/` — `wallet` (secp256k1), `client` (EIP-712 sign), `facilitator` (**local** crypto-verify /
+  **remote** CSPR.cloud), `service` (resource catalog + spend/earn ledger)
+- protected routes `GET /api/safety/check`, `GET /api/premium/intel`, demo `POST /api/x402/demo-sale`
 
 `local` mode produces **real EIP-712/secp256k1 signatures** with full crypto verification;
 on-chain settlement is gated behind `remote` mode (CSPR.cloud facilitator token + CEP-18
@@ -165,6 +191,9 @@ backend/
     wallet.ts         Casper TransactionV1 signing wallet
     deployUtils.ts    MCP-output / unsigned-tx helpers
     x402/             wallet · client · facilitator · service · types
+    safety/oracle.ts  Token Safety Oracle (honeypot + liquidity checks)
+    safety-mcp.ts     standalone x402-paid MCP server (check_token_safety)
+    safety-mcp-demo.ts  external buyer-agent demo (402 → pay → report)
   scripts/keygen.ts   Casper keypair generator
 frontend/
   src/App.tsx         chat UI, action pipeline, wallet card, x402 feed

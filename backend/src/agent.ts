@@ -4,6 +4,7 @@ import { config } from "./config.js";
 import { CsprTradeMcp, type McpTool } from "./mcpClient.js";
 import { Wallet } from "./wallet.js";
 import { X402Service } from "./x402/service.js";
+import { SafetyOracle } from "./safety/oracle.js";
 import {
   extractDeployJson,
   findPubkeyParam,
@@ -51,6 +52,7 @@ export class DefiAgent {
   private mcp: CsprTradeMcp;
   private wallet!: Wallet;
   private x402 = new X402Service();
+  private oracle!: SafetyOracle;
   private toolsCache: McpTool[] | null = null;
   private pubkeyParamByTool = new Map<string, string | null>();
   // Кэш unsigned-транзакций: tx_id -> deploy JSON (не гоняем 100КБ через модель).
@@ -66,6 +68,7 @@ export class DefiAgent {
 
   private async init(): Promise<void> {
     if (!this.wallet) this.wallet = await Wallet.create();
+    if (!this.oracle) this.oracle = new SafetyOracle(this.mcp);
     if (!this.toolsCache) {
       this.toolsCache = await this.mcp.listTools();
       for (const t of this.toolsCache) {
@@ -130,6 +133,22 @@ export class DefiAgent {
     return this.x402.simulateSale(() => this.marketIntel());
   }
 
+  /** Token Safety Oracle: проверка токена (используется в чате бесплатно). */
+  async checkTokenSafety(token: string) {
+    await this.init();
+    return this.oracle.check(token);
+  }
+
+  /** Требования оплаты для платного safety-эндпоинта/MCP (продаём внешним агентам). */
+  safetyRequirements() {
+    return this.x402.requirementsFor("safety-check");
+  }
+
+  /** Оплаченный внешним клиентом запрос safety-check (x402 → earn). */
+  async fulfillSafety(token: string, payload: any) {
+    return this.x402.fulfill("safety-check", payload, () => this.oracle.check(token));
+  }
+
   /** Требования оплаты для защищённого HTTP-ресурса /api/premium/intel. */
   premiumRequirements() {
     return this.x402.requirementsFor("market-intel");
@@ -162,10 +181,16 @@ export class DefiAgent {
         },
       },
       {
-        name: "get_safety_signal",
+        name: "check_token_safety",
         description:
-          "Купить у ВНЕШНЕГО провайдера оценку безопасности сделки (safety signal) за x402-микроплатёж. Агент автономно платит CEP-18 через x402 и получает риск-оценку, которой у него самого нет. Используй перед крупной сделкой или когда пользователь просит проверку риска/«альфу».",
-        input_schema: { type: "object", properties: {} },
+          "Проверить безопасность токена на Casper через наш Token Safety Oracle: honeypot/налог на продажу (round-trip котировок) и ликвидность (price impact). Возвращает risk score и уровень SAFE/CAUTION/DANGER. Используй, когда пользователь спрашивает, безопасен ли токен, или ПЕРЕД свопом в незнакомый токен.",
+        input_schema: {
+          type: "object",
+          properties: {
+            token: { type: "string", description: "Символ или package hash токена (напр. sCSPR)" },
+          },
+          required: ["token"],
+        },
       },
     ];
   }
@@ -204,48 +229,12 @@ export class DefiAgent {
           : undefined,
       };
     }
-    if (name === "get_safety_signal") {
-      // Поток 1: агент платит внешнему провайдеру за риск-оценку (x402, spend).
-      const r = await this.x402.purchase("safety-signal", () => this.safetySignal());
-      if (!r.ok) {
-        return { error: "x402-платёж не прошёл: " + r.receipt.reason, payment: r.receipt };
-      }
-      return {
-        paid: {
-          amount: r.receipt.priceLabel,
-          payer: r.receipt.payer,
-          transaction: r.receipt.transaction,
-          via: "x402",
-        },
-        safety: r.data,
-      };
+    if (name === "check_token_safety") {
+      const token = String(input?.token ?? "").trim();
+      if (!token) return { error: "Укажи token (символ или package hash)" };
+      return this.oracle.check(token);
     }
     return { error: `Неизвестный локальный инструмент: ${name}` };
-  }
-
-  /** Покупаемый сигнал безопасности: риск-оценка из условий рынка CSPR/sCSPR. */
-  private async safetySignal(): Promise<unknown> {
-    let impact = "";
-    try {
-      const res = await this.mcp.callTool("estimate_price_impact", {
-        token_in: "CSPR",
-        token_out: "sCSPR",
-        amount: "1000",
-      });
-      impact = mcpText(res);
-    } catch (e) {
-      impact = "нет данных: " + String(e);
-    }
-    const pct = Number((impact.match(/([\d.]+)\s*%/) ?? [])[1] ?? "0");
-    const level = pct < 0.5 ? "SAFE" : pct < 2 ? "CAUTION" : "RISK";
-    return {
-      provider: "external x402 safety oracle",
-      pair: "CSPR/sCSPR",
-      risk_level: level,
-      price_impact_pct: pct,
-      detail: impact,
-      generated_at: new Date().toISOString(),
-    };
   }
 
   /** Премиум-данные за пейволом: реальная аналитика CSPR/sCSPR с CSPR.trade. */

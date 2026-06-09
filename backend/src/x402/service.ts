@@ -15,10 +15,8 @@ type ResourceDef = {
   description: string;
 };
 
-// Казна платформы (мы получаем продажи аналитики и сервис-комиссии).
+// Казна платформы (мы получаем продажи аналитики, проверок и сервис-комиссии).
 const TREASURY = config.x402.payee;
-// Внешний провайдер данных (агент платит ему за то, чего у него нет).
-const PROVIDER = "00" + "0".repeat(62) + "02";
 
 // Каталог x402-ресурсов двусторонней экономики агента.
 const RESOURCES: Record<string, ResourceDef> = {
@@ -30,13 +28,13 @@ const RESOURCES: Record<string, ResourceDef> = {
     payTo: TREASURY,
     description: "Premium market analytics (sold to external agents)",
   },
-  // ПОКУПАЕМ: агент платит внешнему провайдеру за оценку безопасности сделки → spend.
-  "safety-signal": {
-    amount: "1000000",
-    priceLabel: "0.001 USDC",
-    direction: "spend",
-    payTo: PROVIDER,
-    description: "External trade-safety score",
+  // ПРОДАЁМ: внешние агенты платят НАМ за проверку безопасности токена → earn.
+  "safety-check": {
+    amount: "2000000",
+    priceLabel: "0.002 USDC",
+    direction: "earn",
+    payTo: TREASURY,
+    description: "Casper token safety check (sold via x402 + MCP)",
   },
   // ПОКУПАЕМ: сервис-комиссия за каждую исполненную сделку → spend.
   "trade-fee": {
