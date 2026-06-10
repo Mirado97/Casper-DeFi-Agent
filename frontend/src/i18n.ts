@@ -48,6 +48,8 @@ type Dict = {
   resultLabel: string;
   errorPrefix: string;
   netError: string;
+  demoText: string;
+  demoLink: string;
   toolLabels: Record<string, string>;
 };
 
@@ -92,6 +94,8 @@ export const I18N: Record<Lang, Dict> = {
     resultLabel: "result",
     errorPrefix: "⚠ Error: ",
     netError: "⚠ Network unavailable: ",
+    demoText: "Static preview — the live agent runs on the backend. Clone & run locally to chat for real.",
+    demoLink: "View on GitHub",
     toolLabels: {
       get_quote: "Quote",
       analyze_trade: "Trade analysis",
@@ -150,6 +154,8 @@ export const I18N: Record<Lang, Dict> = {
     resultLabel: "результат",
     errorPrefix: "⚠ Ошибка: ",
     netError: "⚠ Сеть недоступна: ",
+    demoText: "Статичное превью — живой агент работает на бэкенде. Клонируй и запусти локально, чтобы общаться по-настоящему.",
+    demoLink: "Открыть на GitHub",
     toolLabels: {
       get_quote: "Котировка",
       analyze_trade: "Анализ сделки",

@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  // Относительный base — ассеты грузятся под любым под-путём (GitHub Pages: /Casper-DeFi-Agent/).
+  base: "./",
   plugins: [react()],
   server: {
     port: 5173,

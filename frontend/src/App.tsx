@@ -22,6 +22,11 @@ type X402Info = {
   payments: Payment[];
 };
 
+// База API. Пусто = относительный путь (локально через прокси). На GitHub Pages
+// без бэкенда останется пустой → приложение покажет баннер «статичное превью».
+const API = (import.meta.env.VITE_API_BASE as string) || "";
+const REPO = "https://github.com/Mirado97/Casper-DeFi-Agent";
+
 const short = (k: string) => (k.length > 16 ? `${k.slice(0, 9)}…${k.slice(-5)}` : k);
 
 export default function App() {
@@ -41,17 +46,17 @@ export default function App() {
   const endRef = useRef<HTMLDivElement>(null);
 
   function refreshWallet() {
-    fetch("/api/wallet").then((r) => r.json()).then(setWallet).catch(() => {});
-    fetch("/api/x402").then((r) => r.json()).then(setX402).catch(() => {});
+    fetch(`${API}/api/wallet`).then((r) => r.json()).then(setWallet).catch(() => {});
+    fetch(`${API}/api/x402`).then((r) => r.json()).then(setX402).catch(() => {});
   }
   async function simulateBuyer() {
     try {
-      await fetch("/api/x402/demo-sale", { method: "POST" });
+      await fetch(`${API}/api/x402/demo-sale`, { method: "POST" });
     } catch {}
     refreshWallet();
   }
   useEffect(() => {
-    fetch("/api/health")
+    fetch(`${API}/api/health`)
       .then((r) => r.json())
       .then((h) => { setOnline(!!h.ok); setModel(h.model ?? ""); })
       .catch(() => setOnline(false));
@@ -68,7 +73,7 @@ export default function App() {
     setInput("");
     setLoading(true);
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch(`${API}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -193,6 +198,12 @@ export default function App() {
       </aside>
 
       <main className="chat">
+        {online === false && (
+          <div className="demo-banner">
+            <span>🔌 {t.demoText}</span>
+            <a href={REPO} target="_blank" rel="noreferrer">{t.demoLink} →</a>
+          </div>
+        )}
         <div className="messages">
           {messages.length === 0 && (
             <div className="hero">
