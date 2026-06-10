@@ -19,12 +19,15 @@ This project covers **all three pillars** of the Casper AI Toolkit in a single p
 
 | Pillar | This project |
 |--------|--------------|
-| **MCP** | Connects to the official **CSPR.trade MCP** (`mcp.cspr.trade/mcp`) — 23 live DEX tools |
+| **MCP** | **Consumes** the official CSPR.trade MCP (23 live DEX tools) **and publishes its own** Casper MCP server — the paid Token Safety Oracle |
 | **Non-custodial signing** | Signs **Casper 2.0 `TransactionV1`** locally; private key never leaves the host |
 | **x402** | Sells a **Token Safety Oracle** to other agents pay-per-call (EIP-712 / secp256k1) over HTTP **+ MCP** |
 
 It runs against **mainnet** through the real DEX, and presents a polished product UI —
 not a contract + script proof-of-concept.
+
+> **MCP, both ways:** the agent is an MCP *client* of CSPR.trade, and also ships its own MCP
+> *server* (`backend/src/safety-mcp.ts`) that sells the Token Safety Oracle to other agents.
 
 ---
 
