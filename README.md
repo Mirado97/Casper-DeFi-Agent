@@ -162,7 +162,11 @@ npm run mcp -w backend          # stdio MCP server: check_token_safety
 npm run mcp:demo -w backend     # external buyer agent: 402 → pay (x402) → safety report
 ```
 
-Claude Desktop config:
+**See [`docs/MCP_INTEGRATION.md`](docs/MCP_INTEGRATION.md) for detailed integration instructions:**
+- Claude Desktop · Cursor · MCP SDK clients · HTTP API
+- Troubleshooting · Examples
+
+Quick start for Claude Desktop:
 
 ```json
 { "mcpServers": { "casper-token-safety": {
