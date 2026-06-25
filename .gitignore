@@ -8,3 +8,4 @@ secret_key.pem
 *.log
 .DS_Store
 scripts/
+video/
