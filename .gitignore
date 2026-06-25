@@ -8,4 +8,4 @@ secret_key.pem
 *.log
 .DS_Store
 scripts/
-video/
+video/DEMO_PREP.md
