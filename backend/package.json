@@ -15,7 +15,7 @@
     "@anthropic-ai/sdk": "^0.102.0",
     "@casper-ecosystem/casper-eip-712": "^1.2.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@noble/curves": "^1.9.7",
+    "@noble/curves": "^2.2.0",
     "casper-js-sdk": "^5.0.12",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
