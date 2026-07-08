@@ -56,11 +56,16 @@ export default function App() {
     refreshWallet();
   }
   useEffect(() => {
-    fetch(`${API}/api/health`)
-      .then((r) => r.json())
-      .then((h) => { setOnline(!!h.ok); setModel(h.model ?? ""); })
-      .catch(() => setOnline(false));
+    function checkHealth() {
+      fetch(`${API}/api/health`)
+        .then((r) => r.json())
+        .then((h) => { setOnline(!!h.ok); setModel(h.model ?? ""); })
+        .catch(() => setOnline(false));
+    }
+    checkHealth();
     refreshWallet();
+    const id = setInterval(checkHealth, 5000);
+    return () => clearInterval(id);
   }, []);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
   useEffect(() => { localStorage.setItem("lang", lang); }, [lang]);
