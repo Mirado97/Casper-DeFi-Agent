@@ -41,8 +41,9 @@ export class Wallet {
 
   /** Подписывает unsigned TransactionV1 JSON, возвращает подписанную JSON-строку. */
   async signTransactionJson(txJson: Record<string, unknown>): Promise<string> {
+    // casper-js-sdk 5.x: fromJSON/toJSON — статические, sign — синхронный (void).
     const tx = TransactionV1.fromJSON(txJson);
-    await tx.sign(this.pk);
-    return JSON.stringify(tx.toJSON());
+    tx.sign(this.pk);
+    return JSON.stringify(TransactionV1.toJSON(tx));
   }
 }
