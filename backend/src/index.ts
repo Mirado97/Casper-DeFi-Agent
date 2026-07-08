@@ -118,7 +118,7 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-app.listen(config.port, () => {
+app.listen(config.port, "127.0.0.1", () => {
   console.log(`Backend: http://localhost:${config.port}`);
   console.log(`Model:   ${config.model}`);
   console.log(`MCP:     ${config.csprTradeMcpUrl}`);
