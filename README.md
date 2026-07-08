@@ -82,14 +82,47 @@ Open the frontend URL printed by Vite (e.g. http://localhost:5173).
 > The agent works **read-only and analysis-only without any funds**. A Casper key and
 > a little CSPR are only needed to actually broadcast a swap on mainnet.
 
-### Generate an agent wallet (optional, for real swaps)
+### Run a real swap on mainnet
 
-```bash
-npm run keygen -w backend          # prints public key, account hash, hex key; writes secret_key.pem
-```
+To actually broadcast a swap you need an **ed25519** agent wallet with some CSPR and a
+Casper node RPC endpoint. Two constraints (both on the CSPR.trade side) shape this — see
+[Wallet & network requirements](#wallet--network-requirements) below.
 
-Paste the printed `CASPER_SECRET_KEY_HEX` (or `CASPER_SECRET_KEY_PEM`) into `backend/.env`
-and fund the printed address with a few CSPR for gas.
+1. **Generate an ed25519 wallet** (ed25519 is the default — and required, see below):
+
+   ```bash
+   npm run keygen -w backend      # prints the 01... public key + account hash; writes backend/secret_key.pem
+   ```
+
+2. **Configure `backend/.env`:**
+
+   ```env
+   CASPER_SECRET_KEY_PEM=D:\path\to\backend\secret_key.pem   # path printed by keygen
+   CASPER_KEY_ALGO=ed25519
+   CASPER_NODE_RPC_URL=https://node.mainnet.casper.network/rpc
+   ```
+
+3. **Fund the printed `01...` address** with enough CSPR for the swap plus gas (a swap
+   costs ~30 CSPR gas — keep **≥ 45 CSPR** on the wallet for a 10 CSPR swap).
+
+4. **Restart** (`npm run dev`) and confirm the startup log / wallet card shows your `01...`
+   address and balance.
+
+5. In the chat: **`swap 10 CSPR to sCSPR`** → confirm → the agent builds the transaction,
+   signs it locally, and submits it. It returns the on-chain **transaction hash**; verify
+   it on [cspr.live](https://cspr.live).
+
+### Wallet & network requirements
+
+Two constraints, both enforced by CSPR.trade, matter for real swaps:
+
+- **Use an ed25519 key (`01…`, 66 hex).** CSPR.trade's `build_swap` currently rejects
+  secp256k1 sender keys (`02…`, 68 hex) with a validation error, so the agent wallet must
+  be ed25519. `npm run keygen` produces an ed25519 key by default.
+- **Submit directly to a node (`CASPER_NODE_RPC_URL`).** A swap is a ~107 KB session-code
+  transaction, but CSPR.trade's `submit_transaction` MCP endpoint caps request bodies and
+  returns HTTP 413. The agent therefore submits the signed transaction straight to a Casper
+  node RPC. Leave `CASPER_NODE_RPC_URL` unset only for read-only / analysis use (no broadcast).
 
 ---
 
@@ -103,7 +136,8 @@ and fund the printed address with a few CSPR for gas.
 | `CSPR_TRADE_MCP_URL` | MCP endpoint (default `https://mcp.cspr.trade/mcp`) |
 | `PORT` | Backend port (default `8799`) |
 | `CASPER_SECRET_KEY_HEX` / `CASPER_SECRET_KEY_PEM` | Agent signing key (else ephemeral) |
-| `CASPER_KEY_ALGO` | `ed25519` (default) or `secp256k1` |
+| `CASPER_KEY_ALGO` | `ed25519` (default, **required for swaps**) or `secp256k1` |
+| `CASPER_NODE_RPC_URL` | Casper node RPC for direct submit (e.g. `https://node.mainnet.casper.network/rpc`); needed to broadcast swaps |
 | `X402_FACILITATOR_MODE` | `local` (real crypto verify, no settlement) or `remote` (CSPR.cloud) |
 | `X402_*` | x402 network, asset, price, payment key — see `.env.example` |
 
@@ -113,9 +147,13 @@ and fund the printed address with a few CSPR for gas.
 
 CSPR.trade MCP returns an **unsigned Casper 2.0 `TransactionV1`**. The backend caches it
 server-side under a short `tx_id` (so the ~100 KB transaction never round-trips through the
-LLM) and exposes a tool `sign_and_submit(tx_id)`. The agent signs with `casper-js-sdk` and
-submits via `submit_transaction`. The private key stays local; the LLM only ever sees a
-human-readable summary and the `tx_id`.
+LLM) and exposes a tool `sign_and_submit(tx_id)`. The agent signs with `casper-js-sdk`. The
+private key stays local; the LLM only ever sees a human-readable summary and the `tx_id`.
+
+For broadcast, if `CASPER_NODE_RPC_URL` is set the signed transaction is submitted **directly
+to a Casper node** (`RpcClient.putTransaction`) — this avoids the 413 body-size limit on
+CSPR.trade's MCP `submit_transaction` for large session-code swaps. If it is unset, the agent
+falls back to submitting through the MCP tool.
 
 Without a configured key the agent runs with an **ephemeral wallet** — signing works, but
 the network rejects the transaction (no funds), which is ideal for safe debugging.
