@@ -12,7 +12,7 @@
     "mcp:demo": "tsx src/safety-mcp-demo.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.102.0",
+    "@anthropic-ai/sdk": "^0.110.0",
     "@casper-ecosystem/casper-eip-712": "^1.2.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@noble/curves": "^1.9.7",
