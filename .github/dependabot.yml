@@ -1,0 +1,43 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: "all"
+    reviewers:
+      - "Mirado97"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: "all"
+    reviewers:
+      - "Mirado97"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: "all"
+    reviewers:
+      - "Mirado97"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "Mirado97"
+    labels:
+      - "ci"
