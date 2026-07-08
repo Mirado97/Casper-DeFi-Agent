@@ -10,6 +10,11 @@ export const config = {
   csprTradeMcpUrl:
     process.env.CSPR_TRADE_MCP_URL ?? "https://mcp.cspr.trade/mcp",
 
+  // RPC-эндпоинт ноды Casper для ПРЯМОЙ отправки подписанной транзакции.
+  // Нужен потому, что submit_transaction у CSPR.trade MCP режет тело >~100КБ (413),
+  // а своп с session-code весит ~107КБ. Пусто = отправляем через MCP (старый путь).
+  casperNodeRpcUrl: process.env.CASPER_NODE_RPC_URL ?? "",
+
   // Кошелёк агента для локальной подписи транзакций (non-custodial).
   // Приоритет: PEM-файл → hex-ключ → эфемерный (генерится при старте, без средств).
   casperSecretKeyPem: process.env.CASPER_SECRET_KEY_PEM ?? "",

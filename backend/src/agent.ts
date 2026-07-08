@@ -218,16 +218,26 @@ export class DefiAgent {
             "Кошелёк эфемерный (без средств). Подпись возможна, но транзакция будет отклонена сетью. Настрой CASPER_SECRET_KEY_*.",
         };
       }
-      const signed = await this.wallet.signTransactionJson(txJson);
-      const res = await this.mcp.callTool("submit_transaction", {
-        signed_deploy_json: signed,
-      });
+      // CSPR.trade submit_transaction режет тело >~100КБ (413), а своп с session-code
+      // весит ~107КБ. Если задан CASPER_NODE_RPC_URL — шлём подписанную транзакцию
+      // напрямую в ноду; иначе (не задан) — старым путём через MCP.
+      let result: string;
+      if (config.casperNodeRpcUrl) {
+        const hash = await this.wallet.signAndSubmitToNode(txJson, config.casperNodeRpcUrl);
+        result = `Транзакция отправлена в сеть Casper. Hash: ${hash} · https://cspr.live/transaction/${hash}`;
+      } else {
+        const signed = await this.wallet.signTransactionJson(txJson);
+        const res = await this.mcp.callTool("submit_transaction", {
+          signed_deploy_json: signed,
+        });
+        result = mcpText(res);
+      }
       this.pending.delete(input.tx_id);
       // Поток 3: сервис-комиссия за исполненную сделку (x402, spend).
       const fee = await this.x402.purchase("trade-fee");
       return {
         submitted: true,
-        result: mcpText(res),
+        result,
         trade_fee: fee.ok
           ? { amount: fee.receipt.priceLabel, transaction: fee.receipt.transaction, via: "x402" }
           : undefined,

@@ -2,7 +2,8 @@ import fs from "node:fs";
 import pkg from "casper-js-sdk";
 import { config } from "./config.js";
 
-const { PrivateKey, KeyAlgorithm, TransactionV1 } = pkg as any;
+const { PrivateKey, KeyAlgorithm, TransactionV1, Transaction, RpcClient, HttpHandler } =
+  pkg as any;
 
 function algoEnum(): number {
   return config.casperKeyAlgo === "secp256k1"
@@ -45,5 +46,21 @@ export class Wallet {
     const tx = TransactionV1.fromJSON(txJson);
     tx.sign(this.pk);
     return JSON.stringify(TransactionV1.toJSON(tx));
+  }
+
+  /**
+   * Подписывает transaction и отправляет её НАПРЯМУЮ в ноду Casper (JSON-RPC
+   * account_put_transaction), минуя MCP submit_transaction (у него лимит тела ~100КБ).
+   * Возвращает hex-хеш транзакции.
+   */
+  async signAndSubmitToNode(
+    txJson: Record<string, unknown>,
+    nodeRpcUrl: string
+  ): Promise<string> {
+    const tx = TransactionV1.fromJSON(txJson);
+    tx.sign(this.pk);
+    const rpc = new RpcClient(new HttpHandler(nodeRpcUrl, "fetch"));
+    const result = await rpc.putTransaction(Transaction.fromTransactionV1(tx));
+    return result.transactionHash.toHex();
   }
 }
