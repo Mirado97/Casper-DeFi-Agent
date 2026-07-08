@@ -262,6 +262,27 @@ export class DefiAgent {
     };
   }
 
+  /**
+   * Схема тула для Claude. Для build_*-тулов удаляет параметр публичного ключа —
+   * его всё равно подставляет backend, а модели он только мешает (ложно "валидирует"
+   * формат ключа). Кэш toolsCache не мутируется — возвращаем клон.
+   */
+  private schemaForClaude(
+    name: string,
+    schema: Record<string, unknown>
+  ): Anthropic.Tool.InputSchema {
+    const pubParam = this.pubkeyParamByTool.get(name);
+    if (!BUILD_TOOLS.has(name) || !pubParam) {
+      return schema as Anthropic.Tool.InputSchema;
+    }
+    const props = { ...(schema.properties as Record<string, unknown> | undefined) };
+    delete props[pubParam];
+    const required = Array.isArray(schema.required)
+      ? (schema.required as string[]).filter((r) => r !== pubParam)
+      : schema.required;
+    return { ...schema, properties: props, required } as Anthropic.Tool.InputSchema;
+  }
+
   /** Вызов MCP-тула с авто-подстановкой pubkey и кэшированием build_*-транзакций. */
   private async runMcpTool(name: string, input: any): Promise<unknown> {
     const args: Record<string, unknown> = { ...(input ?? {}) };
@@ -309,7 +330,10 @@ export class DefiAgent {
       ...this.toolsCache!.map((t) => ({
         name: t.name,
         description: t.description ?? "",
-        input_schema: t.inputSchema as Anthropic.Tool.InputSchema,
+        // Для build_*-тулов прячем от модели параметр публичного ключа: backend
+        // подставляет его принудительно (runMcpTool), а модель, видя пример "01abc..."
+        // в описании, иначе ошибочно "валидирует" secp256k1-ключ и отказывается.
+        input_schema: this.schemaForClaude(t.name, t.inputSchema),
       })),
       ...this.localTools(),
     ];
