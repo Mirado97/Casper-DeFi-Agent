@@ -1,19 +1,19 @@
-# Подключение Token Safety Oracle MCP к различным сервисам
+# Connecting the Token Safety Oracle MCP to various services
 
-Casper Token Safety Oracle опубликован как МCP сервер. Вы можете подключить его к различным приложениям и сервисам для использования инструмента `check_token_safety` с x402 платежами.
+The Casper Token Safety Oracle is published as an MCP server. You can connect it to a range of applications and services to use the `check_token_safety` tool with x402 payments.
 
 ---
 
 ## 1. Claude Desktop
 
-**Где находится конфиг:**
+**Where the config lives:**
 - **macOS:** `~/.config/Claude/claude_desktop_config.json`
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
-**Инструкция:**
+**Instructions:**
 
-1. Откройте файл конфигурации Claude Desktop
-2. Добавьте или обновите раздел `mcpServers`:
+1. Open the Claude Desktop configuration file
+2. Add or update the `mcpServers` section:
 
 ```json
 {
@@ -26,7 +26,7 @@ Casper Token Safety Oracle опубликован как МCP сервер. Вы
 }
 ```
 
-**Для локального запуска с полным путём:**
+**To run locally with a full path:**
 
 ```json
 {
@@ -45,7 +45,7 @@ Casper Token Safety Oracle опубликован как МCP сервер. Вы
 }
 ```
 
-**Или через npx (если проект установлен глобально):**
+**Or via npx (if the project is installed globally):**
 
 ```json
 {
@@ -61,32 +61,32 @@ Casper Token Safety Oracle опубликован как МCP сервер. Вы
 }
 ```
 
-3. Перезагрузите Claude Desktop (закройте и откройте заново)
-4. В Claude Desktop должны появиться инструменты MCP сервера
-5. Используйте инструмент `check_token_safety` в разговоре:
-   - Сначала вызовите без `x_payment` параметра
-   - Claude получит 402 требование
-   - Claude автоматически подпишет платёж
-   - Повторный вызов вернёт отчёт
+3. Restart Claude Desktop (close it and open it again)
+4. The MCP server's tools should now appear in Claude Desktop
+5. Use the `check_token_safety` tool in conversation:
+   - Call it first without the `x_payment` parameter
+   - Claude receives a 402 requirement
+   - Claude signs the payment automatically
+   - The repeat call returns the report
 
-**Пример запроса в Claude Desktop:**
+**Example prompt in Claude Desktop:**
 ```
-Проверь безопасность токена sCSPR
+Check whether the sCSPR token is safe
 ```
 
 ---
 
 ## 2. Cursor (IDE)
 
-**Где находится конфиг:**
-- **macOS:** `~/.cursor/mcp_server_config.json` или `~/.config/Cursor/mcp_server_config.json`
+**Where the config lives:**
+- **macOS:** `~/.cursor/mcp_server_config.json` or `~/.config/Cursor/mcp_server_config.json`
 - **Windows:** `%APPDATA%\Cursor\mcp_server_config.json`
 - **Linux:** `~/.config/Cursor/mcp_server_config.json`
 
-**Инструкция:**
+**Instructions:**
 
-1. Откройте файл конфигурации Cursor
-2. Добавьте сервер:
+1. Open the Cursor configuration file
+2. Add the server:
 
 ```json
 {
@@ -100,35 +100,35 @@ Casper Token Safety Oracle опубликован как МCP сервер. Вы
 }
 ```
 
-3. Перезагрузите Cursor
-4. Откройте Cursor Composer или используйте MCP в диалоге
-5. Используйте `check_token_safety` в код-генерации:
+3. Restart Cursor
+4. Open Cursor Composer or use MCP in a chat
+5. Use `check_token_safety` in code generation:
 
 ```
-Напиши скрипт, который проверяет безопасность токена sCSPR через MCP
+Write a script that checks the safety of the sCSPR token via MCP
 ```
 
-**Важно:** Убедитесь, что в Cursor включена поддержка MCP (Settings → Features → MCP)
+**Important:** make sure MCP support is enabled in Cursor (Settings → Features → MCP)
 
 ---
 
-## 3. Другие MCP-клиенты
+## 3. Other MCP clients
 
-### 3.1. Команда стандартного MCP клиента (для разработчиков)
+### 3.1. Standard MCP client command (for developers)
 
-Если у вас есть свой MCP клиент, подключитесь к серверу через stdio:
+If you have your own MCP client, connect to the server over stdio:
 
 ```bash
-# Запустить сервер в одном терминале
+# Start the server in one terminal
 npm run mcp -w backend
 
-# В другом терминале, ваш клиент подключится через stdio
+# In another terminal, your client connects over stdio
 node your-mcp-client.ts
 ```
 
-### 3.2. Anthropic Claude SDK (для собственных приложений)
+### 3.2. Anthropic Claude SDK (for your own applications)
 
-Если вы разрабатываете приложение на Node.js/TypeScript:
+If you are building a Node.js/TypeScript application:
 
 ```typescript
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -146,7 +146,7 @@ const client = new Client({
 
 await client.connect(transport);
 
-// Вызвать инструмент без оплаты (получить требование 402)
+// Call the tool without payment (get the 402 requirement)
 const result1 = await client.callTool({
   name: "check_token_safety",
   arguments: { token: "sCSPR" },
@@ -154,7 +154,7 @@ const result1 = await client.callTool({
 
 console.log("402 Requirement:", result1.content[0].text);
 
-// Подписать платёж и повторить вызов
+// Sign the payment and repeat the call
 const X402Wallet = require("./x402/wallet.js").X402Wallet;
 const { createPayment, encodePaymentHeader } = require("./x402/client.js");
 
@@ -174,13 +174,13 @@ console.log("Report:", result2.content[0].text);
 await client.close();
 ```
 
-### 3.3. Python клиент (через subprocess)
+### 3.3. Python client (via subprocess)
 
 ```python
 import subprocess
 import json
 
-# Запустить MCP сервер
+# Start the MCP server
 process = subprocess.Popen(
     ["npm", "run", "mcp", "-w", "backend"],
     stdin=subprocess.PIPE,
@@ -189,7 +189,7 @@ process = subprocess.Popen(
     cwd="/path/to/CasperHakaton"
 )
 
-# Отправить JSON-RPC запрос (MCP использует JSON-RPC по stdio)
+# Send a JSON-RPC request (MCP speaks JSON-RPC over stdio)
 request = {
     "jsonrpc": "2.0",
     "id": 1,
@@ -207,20 +207,20 @@ print(json.loads(response))
 
 ---
 
-## 4. Как самостоятельный сервис через HTTP
+## 4. As a standalone service over HTTP
 
-**Текущее состояние:** Сервер работает через stdio (Standard Input/Output), что безопасно для локального использования.
+**Current state:** the server runs over stdio (Standard Input/Output), which is safe for local use.
 
-**Для HTTP доступа, нужно добавить HTTP обёртку:**
+**For HTTP access you need to add an HTTP wrapper:**
 
-### 4.1. HTTP обёртка (рекомендуется)
+### 4.1. HTTP wrapper (recommended)
 
-Создайте файл `backend/src/mcp-http-server.ts`:
+Create the file `backend/src/mcp-http-server.ts`:
 
 ```typescript
 /**
- * HTTP обёртка для MCP сервера Token Safety Oracle
- * Экспортирует check_token_safety как REST API с x402
+ * HTTP wrapper for the Token Safety Oracle MCP server
+ * Exposes check_token_safety as a REST API with x402
  */
 import express from "express";
 import { CsprTradeMcp } from "./mcpClient.js";
@@ -247,7 +247,7 @@ app.post("/mcp/check_token_safety", async (req, res) => {
   const requirements = x402.requirementsFor("safety-check");
 
   if (!x_payment) {
-    // Первый запрос — требуем оплату
+    // First request — demand payment
     return res.status(402).json({
       error: "payment required",
       message: "Sign the requirements as x402 TransferAuthorization",
@@ -289,7 +289,7 @@ app.listen(PORT, () => {
 });
 ```
 
-**Добавьте скрипт в `backend/package.json`:**
+**Add a script to `backend/package.json`:**
 
 ```json
 {
@@ -299,22 +299,22 @@ app.listen(PORT, () => {
 }
 ```
 
-**Запуск:**
+**Run it:**
 
 ```bash
 npm run mcp:http -w backend
 ```
 
-### 4.2. Использование HTTP API
+### 4.2. Using the HTTP API
 
-**Первый запрос (получить требование):**
+**First request (get the requirement):**
 
 ```bash
 curl -X POST http://localhost:9000/mcp/check_token_safety \
   -H "Content-Type: application/json" \
   -d '{"token": "sCSPR"}'
 
-# Ответ (402):
+# Response (402):
 # {
 #   "error": "payment required",
 #   "accepts": [{
@@ -329,7 +329,7 @@ curl -X POST http://localhost:9000/mcp/check_token_safety \
 # }
 ```
 
-**Второй запрос (с подписанным платежом):**
+**Second request (with a signed payment):**
 
 ```bash
 curl -X POST http://localhost:9000/mcp/check_token_safety \
@@ -339,7 +339,7 @@ curl -X POST http://localhost:9000/mcp/check_token_safety \
     "x_payment": "base64-encoded-payment-payload"
   }'
 
-# Ответ (200):
+# Response (200):
 # {
 #   "paid": {
 #     "status": "settled",
@@ -355,13 +355,13 @@ curl -X POST http://localhost:9000/mcp/check_token_safety \
 # }
 ```
 
-### 4.3. Использование из JavaScript
+### 4.3. Using it from JavaScript
 
 ```javascript
 async function checkTokenSafety(token) {
   const API = "http://localhost:9000/mcp/check_token_safety";
 
-  // 1. Получить требование
+  // 1. Get the requirement
   const response1 = await fetch(API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -372,14 +372,14 @@ async function checkTokenSafety(token) {
     const data = await response1.json();
     const requirements = data.accepts[0];
 
-    // 2. Подписать платёж (псевдокод)
+    // 2. Sign the payment (pseudocode)
     const X402Wallet = require("./x402/wallet.js").X402Wallet;
     const { createPayment, encodePaymentHeader } = require("./x402/client.js");
 
     const wallet = new X402Wallet();
     const payment = createPayment(requirements, wallet);
 
-    // 3. Повторить с подписью
+    // 3. Retry with the signature
     const response2 = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -400,45 +400,45 @@ checkTokenSafety("sCSPR");
 
 ---
 
-## Сравнение способов подключения
+## Comparing the connection methods
 
-| Способ | Плюсы | Минусы | Когда использовать |
-|--------|-------|--------|-------------------|
-| **Claude Desktop** | Простая интеграция, фронтенд для Claude | Только для Claude Desktop | Для юзеров Claude Desktop |
-| **Cursor** | Встроено в IDE, удобно для разработки | Только для Cursor | Для разработчиков в Cursor |
-| **MCP SDK клиент** | Полный контроль, легко встраивать | Нужно писать код | Для собственных приложений |
-| **HTTP API** | Языко-независимый, легко масштабировать | Нужна HTTP обёртка | Для веб-сервисов, микросервисов |
+| Method | Pros | Cons | When to use |
+|--------|------|------|-------------|
+| **Claude Desktop** | Simple integration, a frontend for Claude | Claude Desktop only | For Claude Desktop users |
+| **Cursor** | Built into the IDE, convenient while developing | Cursor only | For developers working in Cursor |
+| **MCP SDK client** | Full control, easy to embed | You have to write code | For your own applications |
+| **HTTP API** | Language-agnostic, easy to scale | Needs an HTTP wrapper | For web services and microservices |
 
 ---
 
 ## Troubleshooting
 
-**Проблема:** "MCP сервер не подключается"
-- Убедитесь, что `npm install` выполнен в `backend/`
-- Проверьте путь `cwd` в конфигурации
-- Посмотрите логи в консоли
+**Problem:** "The MCP server won't connect"
+- Make sure `npm install` has been run in `backend/`
+- Check the `cwd` path in the configuration
+- Look at the console logs
 
-**Проблема:** "402 требование не приходит"
-- Убедитесь, что `X402_FACILITATOR_MODE=local` в `backend/.env`
-- Проверьте конфиг x402 в `backend/.env`
+**Problem:** "The 402 requirement never arrives"
+- Make sure `X402_FACILITATOR_MODE=local` is set in `backend/.env`
+- Check the x402 config in `backend/.env`
 
-**Проблема:** "Платёж отклоняется"
-- Проверьте формат `x_payment` (должен быть base64)
-- Убедитесь, что подпись верна (используйте `X402Wallet`)
-- Посмотрите логи сервера для деталей ошибки
+**Problem:** "The payment is rejected"
+- Check the format of `x_payment` (it must be base64)
+- Make sure the signature is valid (use `X402Wallet`)
+- Look at the server logs for error details
 
 ---
 
-## Примеры интеграции
+## Integration examples
 
-### Пример 1: Chatbot на Node.js (использует MCP)
+### Example 1: A Node.js chatbot (using MCP)
 
 ```typescript
 import { Anthropic } from "@anthropic-ai/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-// Подключить MCP
+// Connect MCP
 const transport = new StdioClientTransport({
   command: "npm",
   args: ["run", "mcp", "-w", "backend"],
@@ -446,7 +446,7 @@ const transport = new StdioClientTransport({
 const mcpClient = new Client({ name: "chatbot" });
 await mcpClient.connect(transport);
 
-// Использовать Claude с MCP инструментами
+// Use Claude with the MCP tools
 const anthropic = new Anthropic();
 const tools = [
   {
@@ -477,13 +477,13 @@ const response = await anthropic.messages.create({
 console.log(response);
 ```
 
-### Пример 2: REST API с х402 (Express)
+### Example 2: A REST API with x402 (Express)
 
-См. раздел 4.1 выше.
+See section 4.1 above.
 
 ---
 
-## Ссылки
+## Links
 
 - [MCP Specification](https://modelcontextprotocol.io)
 - [Anthropic SDK Docs](https://docs.anthropic.com)

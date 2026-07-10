@@ -1,24 +1,24 @@
-# MCP x402 Тестирование
+# MCP x402 Testing
 
-**Дата:** 25 июня 2026  
-**Статус:** ✅ РАБОТАЕТ
+**Date:** June 25, 2026  
+**Status:** ✅ WORKING
 
 ---
 
-## Что тестировали
+## What was tested
 
-Внешний клиент подключается к MCP серверу `safety-mcp.ts` и вызывает инструмент `check_token_safety` через x402 платежи (без встроенного в приложение контекста).
+An external client connects to the `safety-mcp.ts` MCP server and calls the `check_token_safety` tool through x402 payments (without the app's built-in context).
 
-## Результаты
+## Results
 
-### Тест 1: Проверка токена sCSPR
+### Test 1: sCSPR token check
 
 ```
-[1] Первый вызов БЕЗ оплаты:
+[1] First call WITHOUT payment:
     status: 402 (Payment Required)
     price: 0.002 USDC
 
-[2] Второй вызов С подписанным платежом:
+[2] Second call WITH a signed payment:
     receipt: 0.002 USDC settled
     transaction: local-1c4e2ae7c6ca4071
     
@@ -29,14 +29,14 @@
       factors: No major risk signals detected from DEX-side checks
 ```
 
-### Тест 2: Проверка токена CSPR
+### Test 2: CSPR token check
 
 ```
-[1] Первый вызов БЕЗ оплаты:
+[1] First call WITHOUT payment:
     status: 402 (Payment Required)
     price: 0.002 USDC
 
-[2] Второй вызов С подписанным платежом:
+[2] Second call WITH a signed payment:
     receipt: 0.002 USDC settled
     transaction: local-853066a31ca772be
     
@@ -49,13 +49,13 @@
 
 ---
 
-## Запуск тестов
+## Running the tests
 
 ```bash
-# Запустить MCP demo (автоматически спавнит сервер + клиент)
+# Run the MCP demo (spawns the server + client automatically)
 npm run mcp:demo -w backend -- [TOKEN_SYMBOL]
 
-# Примеры:
+# Examples:
 npm run mcp:demo -w backend -- sCSPR
 npm run mcp:demo -w backend -- CSPR
 npm run mcp:demo -w backend -- WCSPR
@@ -63,29 +63,29 @@ npm run mcp:demo -w backend -- WCSPR
 
 ---
 
-## Что проверили
+## What was verified
 
-✅ **MCP сервер запускается** — `Casper Token Safety MCP server ready`
+✅ **The MCP server starts** — `Casper Token Safety MCP server ready`
 
-✅ **x402 требования работают** — первый вызов возвращает 402 + requirements
+✅ **x402 requirements work** — the first call returns 402 + requirements
 
-✅ **x402 платежи работают** — клиент подписывает TransferAuthorization и отправляет
+✅ **x402 payments work** — the client signs a TransferAuthorization and sends it
 
-✅ **Платежи обрабатываются** — сервер проверяет подпись и выполняет операцию
+✅ **Payments are processed** — the server verifies the signature and performs the operation
 
-✅ **Отчёты генерируются** — каждый платёж возвращает детальный анализ токена
+✅ **Reports are generated** — every payment returns a detailed token analysis
 
-✅ **Разные tx ID** — каждая транзакция получает уникальный ID
+✅ **Distinct tx IDs** — each transaction gets a unique ID
 
-✅ **Разные результаты** — система выдаёт разные уровни риска для разных токенов
+✅ **Distinct results** — the system returns different risk levels for different tokens
 
 ---
 
-## Заключение
+## Conclusion
 
-**MCP x402 система полностью работает через внешний клиент.**
+**The MCP x402 system works end to end through an external client.**
 
-Система готова для:
-- Продажи Token Safety Oracle другим AI-агентам
-- Использования в Claude Desktop через конфиг MCP
-- Использования в других приложениях через MCP + x402
+The system is ready for:
+- Selling the Token Safety Oracle to other AI agents
+- Use in Claude Desktop via the MCP config
+- Use in other applications via MCP + x402
