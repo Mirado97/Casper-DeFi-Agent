@@ -282,3 +282,5 @@ TypeScript · Node + Express · React + Vite · [Anthropic SDK](https://docs.ant
 Experimental hackathon software. Runs against Casper **mainnet** via CSPR.trade — real funds
 are at stake when a signing key is configured and funded. Never commit `.env` or key files
 (`*.pem`); they are git-ignored. Use a low-balance wallet for demos.
+
+- [JMT x402 Agent Tools](https://jmt-x402-proxy.jmthomasofficial.workers.dev) — 25 paid x402 endpoints on Base mainnet: web search, AI analysis, crypto/stock data, SEC filings, company intel, news, sentiment, macro dashboard. $0.001-$0.15/call USDC. Local LLM-powered.
