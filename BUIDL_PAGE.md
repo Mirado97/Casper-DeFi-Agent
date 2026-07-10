@@ -1,10 +1,3 @@
-<!-- Текст для BUIDL-страницы DoraHacks. Копируй всё, что ниже линии.
-     Картинки идут по raw-ссылкам с GitHub — на DoraHacks отрендерятся сами.
-     Если редактор не примет markdown-картинки, просто загрузи те же два файла
-     из docs/ (ui-hero.png, ui-analysis.png) через кнопку вставки картинки. -->
-
----
-
 # Casper DeFi Agent
 
 I built a non-custodial AI agent that trades on the live CSPR.trade DEX on Casper. You just talk to it in plain language, something like "swap 50 CSPR to sCSPR" or "is this token safe", and it works out the market for you, shows the price impact and slippage, waits for your ok, then signs the transaction locally with its own key and sends it to the network. It can also pay other agents for premium data over x402, and it sells its own token-safety checks the same way.
