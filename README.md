@@ -112,6 +112,20 @@ Casper node RPC endpoint. Two constraints (both on the CSPR.trade side) shape th
    signs it locally, and submits it. It returns the on-chain **transaction hash**; verify
    it on [cspr.live](https://cspr.live).
 
+### Proof of mainnet execution
+
+A real swap the agent built, signed locally and submitted to a Casper node — 10 CSPR → sCSPR:
+
+```
+Hash:   e81fb1dbd8a95bf0460b405ec05c58cbb4b5d4fd759c0d5af160857d348e9004
+Result: Success, block 8196137, entry point swap_exact_cspr_for_tokens
+Wallet: 01cf19fdd2613c0ca21f3d87e878c25841486a82b0269231be6ea102a86264642f
+```
+
+[View on cspr.live](https://cspr.live/transaction/e81fb1dbd8a95bf0460b405ec05c58cbb4b5d4fd759c0d5af160857d348e9004)
+
+![Mainnet swap transaction on cspr.live](docs/tx-mainnet.png)
+
 ### Wallet & network requirements
 
 Two constraints, both enforced by CSPR.trade, matter for real swaps:
